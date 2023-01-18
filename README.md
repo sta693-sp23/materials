@@ -21,5 +21,7 @@
 * Week 7 - Tableau integration with R
 
 
+## Useful resources
 
+CDVS Workshop w/ Eric Monson - https://duke.libcal.com/event/9994118
 
