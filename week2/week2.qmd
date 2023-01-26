@@ -1,0 +1,644 @@
+---
+title: "Spatial Data"
+author: "Dr. Colin Rundel"
+footer: "Sta 344 - Fall 2022"
+format:
+  revealjs:
+    theme: slides.scss
+    transition: fade
+    slide-number: true
+    self-contained: true
+execute:
+  echo: true
+  warning: false
+  collapse: true
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
+
+library(sf)
+library(stringr)
+
+knitr::opts_chunk$set(
+  fig.align = "center"
+)
+
+options(width=60)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+
+set.seed(20221028)
+```
+
+
+# Spatial data in R
+
+
+## Packages for geospatial data in R
+
+::: {.medium}
+R has a rich package ecosystem for read/writing, manipulating, and analyzing geospatial data.
+
+Some core packages:
+
+* `sp` - core classes for handling spatial data, additional utility functions - **Deprecated**
+
+* `rgdal` - R interface to `gdal` (Geospatial Data Abstraction Library) for reading and writing spatial data - **Deprecated**
+
+* `rgeos` - R interface to `geos` (Geometry Engine Open Source) library for querying and manipulating spatial data. Reading and writing WKT. - **Deprecated**
+
+* `sf` - Combines the functionality of `sp`, `rgdal`, and `rgeos` into a single package based on tidy simple features.
+
+* `raster` - classes and tools for handling spatial raster data.
+
+* `stars` - Reading, manipulating, writing and plotting spatiotemporal arrays (rasters)
+
+See more - [Spatial task view](http://cran.r-project.org/web/views/Spatial.html)
+:::
+
+## Installing `sf`
+
+This is the hardest part of using the `sf` package, difficulty comes from is dependence on several external libraries (`geos`, `gdal`, and `proj`).
+
+* *Windows* - installing from source works when Rtools is installed (system requirements are downloaded from rwinlib)
+
+* *MacOS* - install dependencies via homebrew: `gdal2`, `geos`, `proj`.
+
+* *Linux* - Install development packages for GDAL (>= 2.0.0), GEOS (>= 3.3.0) and Proj.4 (>= 4.8.0) from your package manager of choice.
+
+
+More specific details are included in the [README on github](https://github.com/r-spatial/sf).
+
+
+
+## Simple Features
+
+```{r, echo=FALSE}
+par(mar=c(1,1,2,1), mfrow=c(2,4))
+
+## Single Geometries
+
+pt = st_point(c(30, 10))
+ls = st_linestring(matrix(c(30, 10, 10, 30, 40, 40), byrow=TRUE, ncol=2))
+poly = st_polygon(list(matrix(c(30, 10, 40, 40, 20, 40, 10, 20, 30, 10), ncol=2, byrow=TRUE)))
+poly_hole = st_polygon(
+              list(
+                matrix(c(35, 10, 45, 45, 15, 40, 10, 20, 35, 10), ncol=2, byrow=TRUE),
+                matrix(c(20, 30, 35, 35, 30, 20, 20, 30), ncol=2, byrow=TRUE)
+              )
+            )
+
+plot(pt, axes=FALSE, main="Point", pch=16); box()
+plot(ls, axes=FALSE, main="Linestring");    box()
+plot(poly, axes=FALSE, col="lightgrey", main="Polygon");  box()
+plot(poly_hole, axes=FALSE, col="lightgrey", main="Polygon w/ Hole(s)");  box()
+
+
+## Multi Geometries
+
+pts = st_multipoint(matrix(c(10, 40, 40, 30, 20, 20, 30, 10), ncol=2, byrow=TRUE))
+lss = st_multilinestring(list( 
+        matrix(c(10, 10, 20, 20, 10, 40), ncol=2, byrow=TRUE),
+        matrix(c(40, 40, 30, 30, 40, 20, 30, 10), ncol=2, byrow=TRUE)
+      ))
+        
+polys = st_multipolygon(list(
+          list(matrix(c(30, 20, 45, 40, 10, 40, 30, 20), ncol=2, byrow=TRUE)),
+          list(matrix(c(15, 5, 40, 10, 10, 20, 5, 10, 15, 5), ncol=2, byrow=TRUE))
+        ))
+polys_hole = st_multipolygon(list(
+                list(matrix(c(40, 40, 20, 45, 45, 30, 40, 40), ncol=2, byrow=TRUE)),
+                list(
+                  matrix(c(20, 35, 10, 30, 10, 10, 30, 5, 45, 20, 20, 35), ncol=2, byrow=TRUE),
+                  matrix(c(30, 20, 20, 15, 20, 25, 30, 20), ncol=2, byrow=TRUE)
+                )
+              ))
+
+plot(pts, axes=FALSE, main="Multipoint", pch=16); box()
+plot(lss, axes=FALSE, main="Multilinestring");    box()
+plot(polys, axes=FALSE, col="lightgrey", main="Multipolygon");  box()
+plot(polys_hole, axes=FALSE, col="lightgrey", main="Multipolygon w/ Hole(s)");  box()
+```
+
+
+## Reading, writing, and converting
+
+- `sf`
+    * `st_read()` / `st_write()` - Shapefile, GeoJSON, KML, ...
+    * `read_sf()` / `write_sf()` - Same, supports tibbles ...
+    * `st_as_sfc()` / `st_as_wkt()` - sf <-> WKT
+    * `st_as_sfc()` / `st_as_binary()` - sf <-> WKB
+    * `st_as_sfc()` / `as(x, "Spatial")` - sf <-> sp
+
+::: {.aside}
+See [sf vignette #2 - Reading, Writing and Converting Simple Features](https://cran.r-project.org/web/packages/sf/vignettes/sf2.html).
+:::
+
+
+
+
+## Example data
+
+::: {.small}
+```{r}
+nc  = read_sf("data/nc_counties/", quiet=TRUE)
+air = read_sf("data/airports/", quiet=TRUE)
+hwy = read_sf("data/us_interstates/", quiet=TRUE)
+```
+:::
+
+. . .
+
+::: {.small}
+```{r}
+nc
+```
+:::
+
+##
+
+::: {.small}
+```{r}
+air
+```
+:::
+
+##
+
+::: {.small}
+```{r}
+hwy
+```
+:::
+
+## `sf` structure
+
+::: {.small}
+```{r}
+str(nc)
+```
+:::
+
+## `sf` classes
+
+```{r}
+class(nc)
+```
+
+. . .
+
+```{r}
+class(nc$geometry)
+class(st_geometry(nc))
+```
+
+. . .
+
+```{r}
+class(nc$geometry[[1]])
+```
+
+
+## Projections / CRS
+
+::: {.small}
+```{r}
+st_crs(nc)
+```
+:::
+
+::: {.aside}
+For EPSG see [here](https://en.wikipedia.org/wiki/EPSG_Geodetic_Parameter_Dataset)
+:::
+
+##
+
+::: {.small}
+```{r}
+st_crs(hwy)
+```
+:::
+
+
+
+
+
+
+
+
+## Projections
+
+```{r projs, echo=FALSE, message=FALSE}
+lat_lines  = map(seq(9.999, 89.999, length.out = 9), ~ cbind(seq(-179.999, -9.999, length.out=100), .))
+long_lines = map(seq(-179.999, -9.999, length.out = 17), ~ cbind(., seq(9.999, 89.999, length.out=100))) 
+
+lat_long = c(lat_lines, long_lines) %>% 
+  st_multilinestring() %>%
+  st_sfc() %>%
+  st_set_crs("+proj=longlat +datum=WGS84 +no_defs")
+
+data(wrld_simpl, package = "maptools")
+world = st_as_sf(wrld_simpl)
+
+NAm = world %>% filter(FIPS %in% c("CA","GL","MX","US"))
+NAm_google = st_transform(NAm, "+init=epsg:3857")
+
+
+par(mar=c(3,2,2,1),mfrow=c(2,3))
+plot(lat_long, col=adjustcolor("grey",alpha.f = 0.5), axes=TRUE, main="Lat/Long (epsg:4326)")
+plot(st_geometry(NAm), col="black", add=TRUE)
+
+plot(st_transform(lat_long, "+init=epsg:3857"), col=adjustcolor("grey",alpha.f = 0.5), axes=TRUE, main="Google / Web Mercator (epsg:3857)", ylim=c(0, 2e7))
+plot(st_transform(NAm, "+init=epsg:3857") %>% st_geometry(), col="black", add=TRUE)
+
+lcc = "+proj=lcc +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+plot(st_transform(lat_long, lcc), col=adjustcolor("grey",alpha.f = 0.5), axes=TRUE, main="Lambert Conformal Conic:")
+plot(st_transform(NAm, lcc) %>% st_geometry(), col="black", add=TRUE)
+
+aea = "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+plot(st_transform(lat_long, aea), col=adjustcolor("grey",alpha.f = 0.5), axes=TRUE, main="Alberts Equal Area")
+plot(st_transform(NAm, aea) %>% st_geometry(), col="black", add=TRUE)
+
+robinson = "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+plot(st_transform(lat_long, robinson), col=adjustcolor("grey",alpha.f = 0.5), axes=TRUE, main="Robinson")
+plot(st_transform(NAm, robinson) %>% st_geometry(), col="black", add=TRUE)
+
+mollweide = "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+plot(st_transform(lat_long, mollweide), col=adjustcolor("grey",alpha.f = 0.5), axes=TRUE, main="Mollweide")
+plot(st_transform(NAm, mollweide) %>% st_geometry(), col="black", add=TRUE)
+```
+
+
+
+# Plotting
+
+
+## Base Plots
+
+```{r}
+plot(nc)
+```
+
+## Geometry Plot
+
+```{r}
+plot(st_geometry(nc), axes=TRUE)
+```
+
+## Graticules
+
+```{r}
+plot(nc[,"AREA"], axes=TRUE)
+```
+
+## Graticules
+
+```{r}
+plot(nc[,"AREA"], graticule=st_crs(nc), axes=TRUE)
+```
+
+## Graticules (EPSG:3631)
+
+```{r}
+plot(st_transform(nc[,"AREA"], 3631), axes=TRUE)
+```
+
+## Graticules (EPSG:3631)
+
+```{r}
+plot(st_transform(nc[,"AREA"], 3631), graticule=st_crs(nc), axes=TRUE)
+```
+
+## Graticules (EPSG:3631)
+
+```{r}
+plot(st_transform(nc[,"AREA"], 3631), graticule=st_crs(3631), axes=TRUE)
+```
+
+## ggplot2
+
+```{r}
+ggplot(nc) + 
+  geom_sf(aes(fill=AREA))
+```
+
+## ggplot2 + projections
+
+```{r}
+ggplot(st_transform(nc, 3631)) + 
+  geom_sf(aes(fill=AREA))
+```
+
+## ggplot2 + viridis
+
+```{r}
+ggplot(st_transform(nc, 3631)) + 
+  geom_sf(aes(fill=AREA)) +
+  scale_fill_viridis_c()
+```
+
+
+## ggplot2 + calculations
+
+```{r}
+ggplot(st_transform(nc, 3631)) + 
+  geom_sf(aes(fill=AREA/PERIMETER^2)) +
+  scale_fill_viridis_c()
+```
+
+## Other color palettes (discrete)
+
+![](imgs/brewer.png){fig-align="center" width="50%"}
+
+::: {.aside}
+[ColorBrewer 2.0](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) - color advice for maps
+:::
+
+## Picking palette breaks
+
+![](imgs/breaks1.png){fig-align="center" width="80%"}
+
+::: {.aside}
+From [How to choose an interpolation for your color scale](https://blog.datawrapper.de/interpolation-for-color-scales-and-maps/)
+:::
+
+## Picking palette breaks
+
+![](imgs/breaks2.png){fig-align="center" width="80%"}
+
+::: {.aside}
+From [How to choose an interpolation for your color scale](https://blog.datawrapper.de/interpolation-for-color-scales-and-maps/)
+:::
+
+
+
+# Layering maps
+
+## Data
+
+```{r fig.height=3.5, fig.width=8}
+par(mar=c(3,3,3,0.1), mfrow=c(1,3))
+plot(st_geometry(nc),  axes=TRUE, main="nc")
+plot(st_geometry(air), axes=TRUE, pch=16, col="blue", main="air")
+plot(st_geometry(hwy), axes=TRUE, col="red", main="hwy")
+```
+
+## Base R layers
+
+```{r}
+plot(st_geometry(nc),  axes=TRUE)
+plot(st_geometry(air), axes=TRUE, pch=16, col="blue", add=TRUE)
+plot(st_geometry(hwy), axes=TRUE, col="red", add=TRUE)
+```
+
+## Base R layers - reproject
+
+```{r}
+hwy_ll = st_transform(hwy, st_crs(nc))
+
+plot(st_geometry(nc),  axes=TRUE)
+plot(st_geometry(air), axes=TRUE, pch=16, col="blue", add=TRUE)
+plot(st_geometry(hwy_ll), axes=TRUE, col="red", add=TRUE)
+```
+
+
+## ggplot layers
+
+```{r}
+ggplot() +
+  geom_sf(data=nc) +
+  geom_sf(data=air, color="blue") +
+  geom_sf(data=hwy, color="red")
+```
+
+## ggplot layers - extent
+
+```{r}
+bb = st_bbox(nc)
+ggplot() +
+  geom_sf(data=nc) +
+  geom_sf(data=air, color="blue") +
+  geom_sf(data=hwy, color="red") +
+  lims(x=bb[c(1,3)], y=bb[c(2,4)])
+```
+
+
+# Plotting MCMC results
+
+## Scottish Lip Cancer Data
+
+```{r echo=FALSE}
+lip_cancer = readRDS("data/lip_cancer.rds")
+
+lip_cancer |>
+  pivot_longer(Observed:Expected, names_to = "var", values_to = "value") |>
+  ggplot() +
+    geom_sf(aes(fill=value), color=NA) +
+    facet_wrap(~forcats::as_factor(var))
+```
+
+##
+
+```{r echo=FALSE}
+( ggplot(lip_cancer) +
+    geom_sf(aes(fill=Observed/Expected), color=NA) + 
+    labs(title="Obs/Exp",fill="")
+) +
+( ggplot(lip_cancer) +
+    geom_sf(aes(fill=pcaff), color=NA) +
+    labs(title="% Agg Fish Forest",fill="")
+)
+```
+
+## Neighborhood / weight matrix
+
+::: {.small}
+```{r}
+A = (st_distance(lip_cancer) |> unclass()) < 1e-6
+listw = spdep::mat2listw(A)
+```
+:::
+
+```{r echo=FALSE}
+plot(st_geometry(lip_cancer), asp=1) 
+plot(listw, coords = st_coordinates(st_centroid(lip_cancer)), add=TRUE, col="blue", pch=16)
+```
+
+## A hierachical model for lip cancer
+
+We have observed counts of lip cancer for 56 districts in Scotland. Let $y_i$ represent the number of lip cancer for district $i$.
+
+$$\begin{aligned}
+y_i &\sim \text{Poisson}(\lambda_i) \\
+\\
+\log(\lambda_i) &= \log(E_i) + x_i \beta + \omega_i \\
+\\
+\boldsymbol{\omega} &\sim N(\boldsymbol{0},~\sigma^2(\boldsymbol{D}-\phi\,\boldsymbol{A})^{-1})
+\end{aligned}$$
+
+where $E_i$ is the expected counts for each region (and serves as an offset), $\boldsymbol{D}$ is a diagonal matrix of neighbor counts, and $\boldsymbold{A}$ is the adjacency matrix.
+
+
+## Data prep & CAR model
+
+::: {.small}
+```{r}
+X = model.matrix(~scale(lip_cancer$pcaff))
+offset = lip_cancer$Expected
+y = lip_cancer$Observed
+```
+
+```{r}
+car_model = "
+data {
+  int<lower=0> N;
+  int<lower=0> p;
+  int<lower=0> y[N];
+  matrix[N,N] A;
+  matrix[N,p] X;
+  vector[N] offset;
+}
+transformed data {
+  vector[N] nb = A * rep_vector(1, N);
+  matrix[N,N] D = diag_matrix(nb);
+}
+parameters {
+  vector[N] w_s;
+  vector[p] beta;
+  real<lower=0> sigma2;
+  real<lower=0,upper=1> phi;
+}
+transformed parameters {
+  vector[N] eta = log(offset) + X * beta + w_s; 
+}
+model {
+  matrix[N,N] Sigma_inv = (D - phi * A) / sigma2;
+  w_s ~ multi_normal_prec(rep_vector(0,N), Sigma_inv);
+
+  beta ~ normal(0,10);
+  sigma2 ~ cauchy(0,5);
+  
+  y ~ poisson_log(eta);
+}
+"
+```
+:::
+
+## CAR Fitting
+
+```{r include=FALSE, cache=TRUE}
+car = rstan::stan_model(model_code = car_model)
+
+car_m = rstan::sampling(
+  car, iter=5000, cores=4,
+  data = list(N=nrow(X), A=A, X=X, p=ncol(X), offset=offset, y=y)
+)
+```
+
+```{r eval=FALSE}
+car = rstan::stan_model(model_code = car_model)
+
+car_m = rstan::sampling(
+  car, iter=5000, cores=4,
+  data = list(N=nrow(X), A=A, X=X, p=ncol(X), offset=offset, y=y)
+)
+```
+
+##
+
+```{r echo=FALSE}
+car_m %>%
+  tidybayes::gather_draws(sigma2, phi, beta[i]) %>%
+  mutate(
+    .variable = ifelse(is.na(i), .variable, paste0(.variable,"_",i)),
+    .chain = as.factor(.chain)
+  ) %>%
+  ggplot(aes(x=.iteration, y=.value, color=.chain)) +
+    geom_line() +
+    facet_wrap(~.variable, scales = "free_y")
+```
+
+##
+
+```{r echo=FALSE}
+car_m %>%
+  tidybayes::gather_draws(sigma2, phi, beta[i]) %>%
+  mutate(
+    .variable = ifelse(is.na(i), .variable, paste0(.variable,"_",i)),
+    .chain = as.factor(.chain)
+  ) %>%
+  ggplot(aes(x=.value, fill=.chain)) +
+    geom_density(alpha=0.2) +
+    facet_wrap(~.variable, scales = "free")
+```
+
+## $\hat\lambda$ posterior draws
+
+```{r echo=FALSE}
+car_m %>%
+  tidybayes::gather_draws(eta[i]) %>%
+  filter(i <= 6) %>%
+  mutate(
+    .variable = paste0(.variable,"_",i),
+    .chain = as.factor(.chain)
+  ) %>%
+  ggplot(aes(x=.iteration, y=.value, color=.chain)) +
+    geom_line() +
+    facet_wrap(~.variable, scales = "free_y")
+```
+
+
+## Prediction summaries
+
+::: {.small}
+```{r echo=FALSE}
+(car_pred = tidybayes::gather_draws(car_m, eta[i]) %>%
+  group_by(.variable, i) %>%
+  summarize(
+    mean = mean(.value),
+    q25 = quantile(.value, 0.25),
+    q75 = quantile(.value, 0.75),
+    sd = sd(.value),
+    .groups = "drop"
+  ))
+```
+:::
+
+## Joining draws with sf
+
+```{r}
+(car_lip_cancer = lip_cancer %>% 
+  mutate(i = seq_len(n())) %>%
+  left_join(
+    car_pred %>% filter(.variable == "eta"),
+    by = "i"
+  ) %>%
+  mutate(y_pred = exp(mean)))
+```
+
+
+## Results
+
+```{r}
+( ggplot(car_lip_cancer) +
+    geom_sf(aes(fill=Observed), color=NA) + 
+    labs(title="Observed Cases",fill="")) +
+( ggplot(car_lip_cancer) +
+    geom_sf(aes(fill=y_pred), color=NA) + 
+    labs(title="Predicted Cases",fill=""))
+```
+
+
+
+## Posterior uncertainty
+
+```{r echo=FALSE}
+( ggplot(car_lip_cancer) +
+    geom_sf(aes(fill=sd), color=NA) + 
+    labs(title="Posterior SD",fill="")) +
+( ggplot(car_lip_cancer) +
+    geom_sf(aes(fill=q75-q25), color=NA) + 
+    labs(title="Posterior IQR",fill=""))
+```
