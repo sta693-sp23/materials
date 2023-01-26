@@ -1,10 +1,10 @@
-# materials
+[![Deploy static content to Pages](https://github.com/sta693-sp23/materials/actions/workflows/static.yml/badge.svg)](https://github.com/sta693-sp23/materials/actions/workflows/static.yml)
 
 ## Schedule
 
 * Week 1 - Scheduling
 
-* Week 2 - Spatial visualization [:blue_book:](https://sta693-sp23.github.io/materials/week2/week2.html)
+* Week 2 - Spatial visualization [:notebook:](https://sta693-sp23.github.io/materials/week2/week2.html)
   - Readings:
     - [Plotting Simple Features](https://r-spatial.github.io/sf/articles/sf5.html) vignette
     - [Geocomputation with R](https://geocompr.robinlovelace.net/)
