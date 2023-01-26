@@ -478,7 +478,7 @@ y_i &\sim \text{Poisson}(\lambda_i) \\
 \boldsymbol{\omega} &\sim N(\boldsymbol{0},~\sigma^2(\boldsymbol{D}-\phi\,\boldsymbol{A})^{-1})
 \end{aligned}$$
 
-where $E_i$ is the expected counts for each region (and serves as an offset), $\boldsymbol{D}$ is a diagonal matrix of neighbor counts, and $\boldsymbold{A}$ is the adjacency matrix.
+where $E_i$ is the expected counts for each region (and serves as an offset), $\boldsymbol{D}$ is a diagonal matrix of neighbor counts, and $\boldsymbol{A}$ is the adjacency matrix.
 
 
 ## Data prep & CAR model
