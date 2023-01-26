@@ -1,5 +1,5 @@
 ---
-title: "Spatial Data"
+title: "Spatial visualization"
 author: "Dr. Colin Rundel"
 footer: "Sta 344 - Fall 2022"
 format:
