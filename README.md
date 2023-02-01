@@ -14,7 +14,7 @@
   - sf basics w/ base + ggplot
   - MCMC results with spatial
   
-* Week 3 - More spatial visualization
+* Week 3 - More spatial visualization [:notebook:](https://sta693-sp23.github.io/materials/week3/week3.html)
   - Readings:
     - [Elegant and informative maps with tmap](https://r-tmap.github.io/tmap-book/)
     - [Leaflet for R](https://rstudio.github.io/leaflet/)

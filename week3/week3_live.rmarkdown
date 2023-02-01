@@ -1,0 +1,137 @@
+---
+title: "week3_live"
+format: html
+---
+
+```{r setup}
+library(tidyverse)
+library(sf)
+library(stars)
+```
+
+
+## Data
+
+
+```{r}
+(elev = read_stars("data/easter_island/ei_elev.tif"))
+(border = read_sf("data/easter_island/ei_border.gpkg"))
+(roads = read_sf("data/easter_island/ei_roads.gpkg"))
+(points = read_sf("data/easter_island/ei_points.gpkg"))
+```
+
+
+
+## ggplot
+
+
+```{r warning=FALSE}
+ggplot() +
+  geom_sf(data=border) +
+    scale_fill_distiller(palette="RdYlGn", na.value = "transparent") +
+  geom_stars(data=elev) +
+  geom_sf(data=points, aes(col=type, size=elevation), shape=17) +
+    scale_size(range = c(2,4)) +
+  geom_sf(data=roads, aes(linewidth=strokelwd)) +
+    scale_linewidth(range=c(0,1)) +
+  guides(linewidth="none", color = "none") + 
+  theme_minimal()
+```
+
+
+## tmap
+
+
+```{r}
+library(tmap)
+```
+
+```{r}
+map = tm_shape(border) +
+  tm_borders() +
+tm_shape(elev) +
+  tm_raster(
+    palette = "-RdYlGn",
+    style = "cont"
+  ) +
+tm_shape(roads) +
+  tm_lines(
+    lwd = "strokelwd",
+    legend.lwd.show = FALSE#,
+    #col = "type",
+    #title.col = "Road type"
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) +
+  tm_symbols(
+    shape = 24,
+    size = "elevation",
+    title.size = "Elevation (m)"
+  ) +
+tm_layout(legend.outside = TRUE,
+  bg.color = "lightblue",
+  main.title = "Easter Island"
+) +
+tm_compass(position = c("right", "top")) +
+tm_scale_bar() +
+tm_credits("Author 2023") +
+tm_add_legend(
+  type = "line",
+  col = "black",
+  title = "Roads"
+)
+```
+
+```{r}
+map
+```
+
+```{r}
+tmap::tmap_mode("view")
+map
+```
+
+```{r}
+tm_basemap(
+  c(osm = "OpenStreetMap", esri = "Esri.WorldStreetMap")
+) +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd = "strokelwd",
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) +
+  tm_symbols(
+    size = "elevation",
+    title.size = "Elevation (m)",
+    legend.size.show = FALSE
+  )
+```
+
+```{r}
+tmap_mode("plot")
+tm_shape(
+  tmaptools::read_osm(border)
+) +
+  tm_rgb() +
+tm_shape(roads) +
+  tm_lines(
+    lwd = "strokelwd",
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) +
+  tm_symbols(
+    shape=24,
+    size = "elevation",
+    title.size = "Elevation (m)",
+    legend.size.show = FALSE
+  )
+
+```

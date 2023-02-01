@@ -371,6 +371,10 @@ tm_shape(
   )
 ```
 
+::: {.aside}
+Possible https://leaflet-extras.github.io/leaflet-providers/preview/
+:::
+
 ## Tiles w/ plot mode
 
 ```{r}
