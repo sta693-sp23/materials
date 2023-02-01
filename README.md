@@ -10,6 +10,7 @@
     - [Geocomputation with R](https://geocompr.robinlovelace.net/)
     - [Hands of Data Visualization](https://handsondataviz.org/map.html) - Chapter 7
     - [How to choose an interpolation for your color scale](https://blog.datawrapper.de/interpolation-for-color-scales-and-maps/)
+    - [Choropleth maps](https://socviz.co/maps.html)
   - sf basics w/ base + ggplot
   - MCMC results with spatial
   

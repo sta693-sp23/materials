@@ -1,0 +1,422 @@
+---
+title: "Week 3 - tmap"
+format: 
+  revealjs:
+    self-contained: true
+execute: 
+  echo: true
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(sf)
+library(stars)
+
+options(width=70)
+```
+
+1 Rapa Nui / Isla de Pascua ((668715.4 7002628, 668776.6 7002640, 668796
+
+## Data
+
+The example data is taken from the [Elegant and informative maps with tmap
+](https://r-tmap.github.io/tmap-book/) book - see the data folder in the github repository.
+
+Filetypes:
+
+* `tif` files are geospatial raster data (e.g. elevation maps)
+
+* `gpkg` are geopackage files (modern version of shapefiles)
+
+
+## Easter Island data - elevation
+
+```{r}
+(elev = read_stars("data/easter_island/ei_elev.tif"))
+```
+
+##
+
+```{r}
+plot(elev)
+```
+
+## Easter Island data - border
+
+```{r}
+(border = read_sf("data/easter_island/ei_border.gpkg"))
+```
+
+##
+
+```{r}
+plot(border)
+```
+
+
+## Easter Island data - roads
+
+```{r}
+(roads = read_sf("data/easter_island/ei_roads.gpkg"))
+```
+
+##
+
+```{r}
+plot(roads %>% select(type))
+```
+
+
+## Easter Island data - points of interest
+
+```{r}
+(points = read_sf("data/easter_island/ei_points.gpkg"))
+```
+
+##
+
+```{r}
+plot(points %>% select(type), pch=16)
+```
+
+
+## Layers with ggplot
+
+```{r ggmap, eval=FALSE}
+ggplot() +
+  geom_sf(data=border) +
+  scale_fill_distiller(palette="RdYlGn", na.value = "transparent") +
+  geom_stars(data=elev) +
+  geom_sf(data=roads, aes(linewidth=strokelwd)) +
+  scale_linewidth_continuous(range = c(0.1,1)) +
+  geom_sf(data=points, aes(color=type, size=elevation), shape=17) +
+  scale_size_continuous(range=c(1,4)) +
+  theme_minimal() +
+  guides(linewidth="none")
+```
+
+##
+
+```{r ref.label="ggmap", echo=FALSE}
+```
+
+
+# tmap
+
+## tmap
+
+> tmap is an actively maintained open-source R-library for drawing thematic maps. The API is based on A Layered Grammar of Graphics and resembles the syntax of ggplot2, a popular R-library for drawing charts.
+
+```{r}
+library(tmap)
+```
+
+## Easter Island - Border
+
+```{r}
+#| output-location: slide
+tm_shape(border) +
+  tm_borders()
+```
+
+## 
+
+```{r}
+#| output-location: slide
+tm_shape(border) +
+  tm_borders() +
+  tm_layout(
+    main.title = "Easter Island",
+    bg.color="lightblue"
+  )
+```
+
+## Roads
+
+```{r}
+#| output-location: slide
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(lwd="strokelwd", legend.lwd.show = FALSE, ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+)
+```
+
+##
+
+```{r}
+#| output-location: slide
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE, 
+    col = "type"
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+)
+```
+
+## Elevation
+
+```{r}
+#| output-location: slide
+tm_shape(elev) +
+  tm_raster() +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+)
+```
+
+
+## 
+
+```{r}
+#| output-location: slide
+tm_shape(elev) +
+  tm_raster(
+    style = "cont",
+    title = "Elevation (m)"
+  ) +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+)
+```
+
+## 
+
+```{r}
+#| output-location: slide
+tm_shape(elev) +
+  tm_raster(
+    style = "cont",
+    title = "Elevation (m)",
+    palette = "-RdYlGn"
+  ) +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+)
+```
+
+## Volcanoes {.smaller}
+
+```{r}
+#| output-location: slide
+tm_shape(elev) +
+  tm_raster(
+    style = "cont",
+    title = "Elevation (m)",
+    palette = "-RdYlGn"
+  ) +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) + 
+  tm_symbols(
+    shape = 24,
+    size = "elevation",
+    title.size = "Volcanoes (m)"
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+)
+```
+
+
+## Other stuff {.smaller}
+
+```{r}
+#| output-location: slide
+tm_graticules(alpha=0.25) +
+tm_shape(elev) +
+  tm_raster(
+    style = "cont",
+    title = "Elevation (m)",
+    palette = "-RdYlGn"
+  ) +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) + 
+  tm_symbols(
+    shape = 24,
+    size = "elevation",
+    title.size = "Volcanoes (m)"
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+) +
+tm_compass(position = c("right", "top")) +
+tm_scale_bar() +
+tm_credits("Author, 2021") +
+tm_add_legend(type = "line", col = "black", title = "Roads")
+```
+
+
+
+## tmap modes
+
+```{r}
+map = tm_graticules(alpha=0.25) +
+tm_shape(elev) +
+  tm_raster(
+    style = "cont",
+    title = "Elevation (m)",
+    palette = "-RdYlGn"
+  ) +
+tm_shape(border) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) + 
+  tm_symbols(
+    shape = 24,
+    size = "elevation",
+    title.size = "Volcanoes (m)"
+  ) +
+tm_layout(
+  main.title = "Easter Island",
+  bg.color="lightblue"
+) +
+tm_compass(position = c("right", "top")) +
+tm_scale_bar() +
+tm_credits("Author, 2021") +
+tm_add_legend(type = "line", col = "black", title = "Roads")
+```
+
+## plot
+
+```{r}
+tmap_mode("plot")
+map
+```
+
+## view
+
+```{r}
+tmap_mode("view")
+map
+```
+
+## Tiles
+
+```{r}
+#| output-location: slide
+tm_basemap(
+  c( osm  = "OpenStreetMap",
+     esri = "Esri.WorldStreetMap")
+) +
+tm_shape(border, is.master = TRUE) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) + 
+  tm_symbols(
+    size = "elevation",
+    legend.size.show = FALSE
+  )
+```
+
+## Tiles w/ plot mode
+
+```{r}
+#| output-location: slide
+tmap_mode("plot")
+tm_basemap(
+  c( osm  = "OpenStreetMap",
+     esri = "Esri.WorldStreetMap")
+) +
+tm_shape(border, is.master = TRUE) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) + 
+  tm_symbols(
+    size = "elevation",
+    legend.size.show = FALSE
+  )
+```
+
+##
+
+```{r}
+#| output-location: slide
+tmap_mode("plot")
+tm_shape(
+  tmaptools::read_osm(border)
+) +
+  tm_rgb() +
+tm_shape(border, is.master = TRUE) +
+  tm_borders() +
+tm_shape(roads) +
+  tm_lines(
+    lwd="strokelwd", 
+    legend.lwd.show = FALSE
+  ) +
+tm_shape(
+  points %>% filter(type == "volcano")
+) + 
+  tm_symbols(
+    size = "elevation",
+    legend.size.show = FALSE
+  )
+```
