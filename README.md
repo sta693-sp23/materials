@@ -22,11 +22,10 @@
   - tmap
   
 
-* Week 4 - Raster / heat maps / hex grid
+* Week 4 - heat maps / hex grid / 2d binning [:notebook:](https://sta693-sp23.github.io/materials/week4/week4.html)
 
 * Week 5 - Shiny 
 
-  -
 
 * Week 6 - Tableau
 

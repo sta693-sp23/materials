@@ -1,0 +1,246 @@
+---
+title: "Week 4 - heat maps, 2d binning"
+format: 
+  html:
+    self-contained: true
+execute: 
+  echo: true
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
+
+theme_set(theme_minimal())
+
+options(width=70)
+```
+
+## Point process data
+
+In general the idea here is that the observed data is just the coordinates of an event occuring (so just x,y potentially with some other observed value) - the idea is that the spatial location is of particular interest (think earthquake forcasting).
+
+The goal of visualizing these data is often to try to understand the underlying distribution of the process that is generating the observations - as such we use a variety of 2d density estimation techniques.
+
+Note there is a fundamental difference between predicting where the next event will occur (location of earthquake) vs predicting some outcome related to that event (how big an earthquake).
+
+### Sample data
+
+```{r}
+# Finish pine tree data
+d = spatstat.data::finpines %>%
+  {tibble(
+    x = .$x,
+    y = .$y,
+    .$marks
+  )}
+
+base = ggplot(d, aes(x=x,y=y)) + coord_fixed()
+
+base + geom_point()
+base + geom_point(aes(size=diameter), alpha=0.5)
+```
+
+### 2d kernel density estimation
+
+
+#### Contour lines
+
+```{r}
+base +
+  geom_density_2d() +
+  geom_point()
+```
+
+```{r}
+base +
+  geom_density_2d(aes(color=after_stat(level)), linewidth=1.5) +
+  geom_point() +
+  scale_color_viridis_c()
+```
+
+#### Filled
+
+```{r}
+base +
+  geom_density_2d_filled() +
+  geom_point() +
+  guides(fill="none")
+```
+
+```{r}
+base +
+  geom_density_2d_filled(bins=100) +
+  geom_point() +
+  guides(fill="none")
+```
+
+#### Bandwidth
+
+ggplot is using the `MASS::kde2d()` function to estimate the density - this function takes a bandwidth parameter which determines how "smooth" to make the density (larger bandwidth = smoother estimate). This is set specifically by the `h` argument (vector of 2 values for x and y respectively) - this is estimated via `MASS::bandwidth.nrd()`. One nice feature of ggplot is that you can use `adjust` instead which scales the `h` values up or down.
+
+```{r}
+( 
+  base +
+    geom_density_2d_filled(bins=100, adjust=0.5) +
+    geom_point() +
+    guides(fill="none") 
+) + (
+  base +
+    geom_density_2d_filled(bins=100, adjust=1.5) +
+    geom_point() +
+    guides(fill="none") 
+)
+```
+
+
+#### KDE-> raster
+
+```{r}
+k = MASS::kde2d(
+  d$x, d$y, n=200,
+  h = c(
+    MASS::bandwidth.nrd(d$x)/2,
+    MASS::bandwidth.nrd(d$y)/2
+  )  
+)
+dk = expand_grid(
+  x = k$x,
+  y = k$y
+) %>%
+  mutate(z = c(t(k$z)))
+````
+
+```{r}
+base +
+  geom_raster(data=dk, aes(fill=z), alpha=0.75) +
+  scale_fill_viridis_c() +
+  geom_density_2d(color="black", adjust=0.5, bins=5)
+```
+
+As with choropleth maps, the choice of scale can matter a lot as right skewed data can cause a lot of the smaller scale structure to be lost.
+
+```{r}
+base +
+  geom_raster(data=dk, aes(fill=z), alpha=0.75) +
+  scale_fill_viridis_c(trans = "sqrt") +
+  geom_density_2d(color="black", adjust=0.5, bins=5)
+```
+
+
+### 2d binning methods
+
+These methods are roughly equivalent to histograms in 1d - as such the choice of the size of the bins matters and should be evaluated.
+
+#### 2d bins
+
+
+```{r}
+base + 
+  ggplot2::geom_bin_2d() +
+  geom_point(color='red')
+```
+
+```{r}
+base + 
+  ggplot2::geom_bin_2d(binwidth=1) +
+  geom_point(color='red')
+```
+
+```{r}
+base + 
+  ggplot2::geom_bin_2d(binwidth=1, drop=FALSE) +
+  geom_point(color='red')
+```
+
+
+#### 2d hex bins
+
+```{r}
+base + 
+  ggplot2::geom_hex() +
+  geom_point(color='red')
+```
+
+```{r}
+ggplot(d, aes(x=x,y=y)) + 
+  ggplot2::geom_hex(bins=5) +
+  geom_point(color="red")
+```
+
+
+### #surf example
+
+Based on https://r-graph-gallery.com/329-hexbin-map-for-distribution.html
+
+
+```{r message=FALSE}
+# From https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/17_ListGPSCoordinates.csv
+surf = read_csv("data/17_ListGPSCoordinates.csv")
+world = rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
+
+base = ggplot(surf) + 
+    geom_sf(data = world, fill="lightgrey", color=NA) +
+    xlim(-22, 25) +
+    ylim(35, 70)
+```
+
+```{r}
+base +
+  geom_point(aes(x=homelon, y=homelat))
+```
+
+```{r}
+base +
+  geom_point(aes(x=homelon, y=homelat), size=0.2, alpha=0.1)
+```
+
+```{r}
+base +
+  geom_bin2d(aes(x=homelon, y=homelat), bins=50, alpha=0.75) +
+  scale_fill_viridis_c(trans="log", breaks=c(1,10,50,500,3000)) +
+  geom_sf(data=world, color="black", fill=NA)
+```
+
+```{r}
+base +
+  geom_hex(aes(x=homelon, y=homelat), bins=50, alpha=0.75) +
+  scale_fill_viridis_c(trans="log", breaks=c(1,10,50,500,3000)) +
+  geom_sf(data=world, color="black", fill=NA)
+```
+
+```{r}
+base +
+  geom_density_2d_filled(aes(x=homelon, y=homelat), bins=20, alpha=0.5, adjust=c(2,1)) +
+  guides(fill="none") +
+  geom_sf(data=world, color="black", fill=NA)
+```
+
+
+```{r}
+surf_eu = surf %>%
+  filter(
+    homelon > -22, homelon < 25,
+    homelat > 35, homelat  < 70
+  )
+
+k = MASS::kde2d(
+  surf_eu$homelon, surf_eu$homelat, n=200,
+  h = c(
+    MASS::bandwidth.nrd(surf_eu$homelon)*2,
+    MASS::bandwidth.nrd(surf_eu$homelat)*1.5
+  )  
+)
+
+dk = expand_grid(
+  x = k$x,
+  y = k$y
+) %>%
+  mutate(z = c(t(k$z))) %>%
+  filter(z >= quantile(z, 0.66))
+
+base +
+  geom_raster(data=dk, aes(x=x,y=y,fill=z), alpha=0.5) +
+  scale_fill_viridis_c(trans="sqrt") +
+  geom_sf(data=world, color="black", fill=NA)
+```
