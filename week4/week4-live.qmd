@@ -1,0 +1,42 @@
+## Setup
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
+
+theme_set(theme_minimal())
+
+options(width=70)
+```
+
+## Finish pines
+
+```{r}
+# Finish pine tree data
+d = spatstat.data::finpines %>%
+  {tibble(
+    x = .$x,
+    y = .$y,
+    .$marks
+  )}
+
+base = ggplot(d, aes(x=x,y=y)) + coord_fixed()
+
+base + geom_point()
+```
+
+
+## Twitter #surf 
+
+
+```{r message=FALSE}
+# From https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/17_ListGPSCoordinates.csv
+surf = read_csv("data/17_ListGPSCoordinates.csv")
+world = rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
+
+base = ggplot(surf) + 
+    geom_sf(data = world, fill="lightgrey", color=NA) +
+    xlim(-22, 25) +
+    ylim(35, 70)
+```
+
