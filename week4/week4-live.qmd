@@ -26,6 +26,53 @@ base + geom_point()
 ```
 
 
+```{r}
+base +
+  geom_bin_2d(bins=20, drop=FALSE) +
+  scale_fill_viridis_c()
+```
+
+```{r}
+base +
+  geom_hex(bins=10) +
+  scale_fill_viridis_c() +
+  geom_point(color="red")
+```
+
+### 2d KDE
+
+```{r}
+base +
+  geom_density_2d(aes(color=after_stat(level))) +
+  geom_point()
+```
+
+```{r}
+base +
+  geom_density_2d_filled(bins=20, adjust=0.8) +
+  geom_point() +
+  guides(fill = "none")
+```
+
+
+```{r}
+k = MASS::kde2d(d$x, d$y, n=200)
+
+dk = expand_grid(
+  x=k$x, y=k$y
+) %>%
+  mutate(z = c(t(k$z)))
+
+base +
+  geom_raster(data=dk, aes(fill=z)) +
+  geom_contour(data=dk, aes(z=z), bins=10, color="black") +
+  scale_fill_viridis_c(trans="sqrt") + 
+  geom_point()
+```
+
+
+
+
 ## Twitter #surf 
 
 
@@ -38,5 +85,66 @@ base = ggplot(surf) +
     geom_sf(data = world, fill="lightgrey", color=NA) +
     xlim(-22, 25) +
     ylim(35, 70)
+
+base +
+   geom_point(aes(x=homelon, y=homelat))
 ```
 
+```{r}
+base +
+   geom_point(aes(x=homelon, y=homelat), size=0.05, alpha=0.05)
+```
+
+```{r}
+base +
+  geom_bin_2d(aes(x=homelon, y=homelat), bins=50) +
+  scale_fill_viridis_c(alpha=0.5) +
+  geom_sf(data=world, color="black", fill=NA)
+```
+
+```{r}
+base +
+  geom_hex(aes(x=homelon, y=homelat), bins=60) +
+  scale_fill_viridis_c(alpha=0.5, trans="log", breaks = c(10,100,500,1000,3000)) +
+  geom_sf(data=world, color="black", fill=NA)
+```
+
+```{r}
+base +
+  geom_density2d_filled(aes(x=homelon, y=homelat), bins=60) +
+  geom_sf(data=world, color="black", fill=NA, alpha=0.5) +
+  scale_fill_viridis_d() +
+  guides(fill="none")
+```
+
+
+
+```{r}
+surf_eu = surf %>%
+  filter(
+    homelon > -22, homelon < 25,
+    homelat > 35, homelat  < 70
+  )
+
+k = MASS::kde2d(
+  surf_eu$homelon, surf_eu$homelat, n=200,
+  h = c(
+    MASS::bandwidth.nrd(surf_eu$homelon)*2.5,
+    MASS::bandwidth.nrd(surf_eu$homelat)*2
+  )  
+)
+
+dk = expand_grid(
+  x = k$x,
+  y = k$y
+) %>%
+  mutate(z = c(t(k$z))) %>%
+  filter(z >= quantile(z, 0.75))
+
+base +
+  geom_raster(data=dk, aes(x=x,y=y,fill=z), alpha=0.75) +
+  scale_fill_viridis_c() +
+  geom_sf(data=world, color="black", fill=NA) + 
+  geom_contour(data=dk, aes(x=x,y=y,z=z), bins=5, linewidth=0.1, color="black")
+  #geom_point(aes(x=homelon, y=homelat), size=0.01, alpha=0.01, color='red')
+```
