@@ -1,0 +1,719 @@
+---
+title: "Select your artists"
+output: 
+  flexdashboard::flex_dashboard:
+    logo: MusicNotes.jpg
+runtime: shiny
+---
+
+<style>
+
+@import url("//fonts.googleapis.com/css?family=Lobster|Cabin:400,700");
+
+:root {  /*Specify all the background and button colors here*/
+--title-color: black;
+
+--side-bg-color: white;
+--side-bd-color: #FF8C00;
+
+--navb-bg-color: white;
+--navb-bd-color: #FF8C00;
+--navb-color: #696969;
+
+--navb-hv-bg-color: white;
+--navb-hv-color: #FF8C00;
+
+--btn-bg-color: white;
+--btn-bd-color: #D3D3D3; 
+--btn-color: #696969;
+--btn-hv-bg-color: #FF8C00;
+}
+
+.navbar-logo{
+width: 30px !important;
+height: 30px !important;
+}
+
+.container > .navbar-header,
+.container-fluid > .navbar-header { /*Title section adjustments*/
+font-family: 'Lobster', cursive;
+font-weight: 500;  /* Boldness */  /*font family Georgia*/
+font-size: 200%;
+}
+
+.navbar-logo {
+width: 60px !important;
+}
+.navbar-brand {
+width: 230px !important;
+}
+
+.navbar .navbar-brand,
+.navbar .navbar-brand:hover,
+.navbar .navbar-brand:focus {
+color: var(--title-color);
+}
+
+.navbar {
+background-color: var(--navb-bg-color);
+border-color: var(--navb-bd-color);
+}
+
+.navbar-nav li a,
+.navbar-nav {
+color: var(--navb-color) !important;
+background-color: var(--navb-bg-color) !important;
+background-image: none !important;
+}
+.navbar-nav li a:hover,
+.navbar-nav > .active > a {
+color: var(--navb-hv-color) !important;
+background-color: var(--navb-hv-bg-color) !important;
+background-image: none !important;
+<!-- font-weight: bold; -->
+}
+
+<!-- /* ------- The next section of CSS is for the sidebar (SIDEBAR) --------------- */ -->
+.section.sidebar {
+color: black;
+background-color: var(--side-bg-color);
+border-color: var(--side-bd-color);
+width: 285px;
+}
+
+<!-- /* ------- The next section of CSS is for actionbuttons and other input (INPUT) --------------- */ -->
+#artist {
+background-color: var(--btn-bg-color);
+border: 2px solid var(--btn-color); 
+color: var(--btn-color);
+border-radius: 5%;
+}
+
+.btn {
+background-color: var(--btn-bg-color);
+border: 2px solid var(--btn-bd-color); 
+color: var(--btn-color);
+text-align: center;
+border-radius: 10%;
+}
+.btn:hover {
+background-color: var(--btn-hv-bg-color); 
+border: 2px solid var(--btn-bd-color); 
+color: var(--btn-color);
+text-align: center;
+box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+
+<!-- /* ------- The next section of CSS is for the artistchip function (CHIP) --------------- */ -->
+
+.rmvbtn {
+color: black;
+background-color: #f1f1f1;
+font-size: 10px;
+border: none
+}
+.rmvbtn:hover {
+color: #FF8C00 !important;
+background-color: #f1f1f1 !important;
+font-size: 10px !important;
+border: none !important;
+box-shadow: 0 0 0 0 !important;
+}
+
+.wiki:link,
+.wiki:visited,
+.wiki:active {
+  color: black;
+  text-decoration: none;
+}
+.wiki:hover {
+  color: #FF8C00;
+  text-decoration: none;
+}
+
+
+<!-- /* ------- The next section of CSS is for the artistslide function (SLIDESHOW) --------------- */ -->
+<!-- /* On hover, add a black background color with a little bit see-through */ -->
+.prev:hover, .next:hover {
+background-color: rgba(0,0,0,0.8);
+}
+
+<!-- /* The dots/bullets/indicators */ -->
+.dot {
+cursor: pointer;
+height: 10px;
+width: 10px;
+margin: 0 2px;
+background-color: #bbb;
+border-radius: 50%;
+display: inline-block;
+transition: background-color 0.6s ease;
+}
+.act, .dot:hover {
+background-color: #717171;
+}
+
+<!-- /* Fading animation */ -->
+.fade {
+-webkit-animation-name: fade;
+-webkit-animation-duration: 1.5s;
+animation-name: fade;
+animation-duration: 1.5s;
+animation: assetAnim 2s 1 forwards;
+}
+
+@-webkit-keyframes fade {
+from {opacity: .4} 
+to {opacity: 1}
+}
+
+@keyframes fade {
+from {opacity: .4} 
+to {opacity: 1}
+}
+<!-- /* ------- End CSS (SLIDESHOW) --------------- */ -->
+
+<!-- /* ------- The next section of CSS is for supressing warnings --------------- */ -->
+.shiny-output-error {
+visibility: hidden;
+}
+.shiny-output-error:before {
+visibility: hidden;
+}
+
+</style>
+
+```{r setup, include=FALSE}
+
+source("./ShinyApp - Packages.R")
+
+source("./ShinyApp - Functions.R")
+
+# Access tokens
+spotify_client_id <- 'a8ecc29f462646beacfbbf7d6745cf58'
+spotify_client_secret <- 'd41523140c204dffb6ac052b93a3d3a1'
+Sys.setenv(SPOTIFY_CLIENT_ID = spotify_client_id)
+Sys.setenv(SPOTIFY_CLIENT_SECRET = spotify_client_secret)
+access_token <- get_spotify_access_token()
+```
+
+
+Sidebar {.sidebar data-width=300px}
+=====================================
+
+```{js}
+//Script to make Enter trigger search_artist
+$(document).keyup(function(event) {
+    if ($("#artist").is(":focus") && (event.key == "Enter")) {
+        $("#search_artist").click();
+    }
+});
+```
+
+```{r}
+
+#=============================================== Ui ==========================
+tags$style(type="text/css",
+         ".shiny-output-error { visibility: hidden; }",
+         ".shiny-output-error:before { visibility: hidden; }"
+)
+
+textInput("artist", "Insert Artist Name", placeholder = 'e.g., Bob Marley, ...')
+
+actionButton("search_artist", "Search", icon = icon("spotify"))
+
+# Reactive element to query all artists related to text inserted into textInput
+artist_list <- eventReactive(input$search_artist, {
+                      if(input$artist == "") {
+                        showNotification("Please type the artist", type = "error")
+                        return()
+                      } else if (nchar(input$artist) > 0) {
+                      return(find_artist(input$artist))
+                      }
+})
+
+# SelectInput to select an artist returned by reactive artist_list
+output$pick_artist <- renderUI({
+            if(!is.null(artist_list())) {
+                  artists = artist_list()$uri %>% simplify %>% as.list
+                  names(artists) = artist_list()$name
+                  list(br(),
+                       selectInput(inputId = "chosen_artist", 
+                                   label = "Results", 
+                                   choices = artists,
+                                   multiple = FALSE)
+                  )
+                  
+            }
+      })
+htmlOutput("pick_artist")
+
+br()
+
+# Reactive element of the selected artist in pick_artist selectInput
+selected_artist <- reactive(if (!is.null(artist_list())) {
+                              artist_list() %>% filter(uri == input$chosen_artist)
+                            })
+
+# Render a picture of the selected artist
+output$picture <- renderText({if (!is.null(artist_list())) {
+ paste0('<img src="', 
+        selected_artist() %>% select(images) %>% unnest(cols=c(images)) %>% slice(1) %>% select(url),
+        '" width=277>')
+ }
+})
+ 
+htmlOutput("picture")
+
+br()
+# ----------------
+
+fluidRow(
+  column(5,
+         actionButton("addbtn", "Add Artist", class="btn btn-success")
+  ),
+  column(5,
+         actionButton("refbtn", "Clear all")
+  )
+)
+
+br()
+
+textOutput('select_artist')
+
+div(id = "placeholder")
+
+textOutput('max_n_artist')
+
+#=============================================== Server ==========================
+
+artist_names <- reactiveValues(avec = c(), nvec = c())
+
+# Add artist button adds artist to artis_names$avec, and creates UI elements to show the added artist, as well as rendering UI element related to clearing the artist from artist_names$avec
+observeEvent(input$addbtn, {
+  
+  #If the text input is empty show a warning
+  if(is.null(selected_artist())) {
+    showNotification("Please type the artist", type = "error")
+    return()
+  }
+  
+  n <- isolate(input$addbtn)
+  if (n == 0) return()
+  
+  
+  output$select_artist <- renderText({"Selected Artist:"})
+  
+  if (length(artist_names$nvec) >= 10) {
+    output$max_n_artist <- renderText({"Maximum number of artist"})
+    showNotification("Maximum number of artist reached", type = "error")
+    return()
+  } else {
+    output$max_n_artist <- renderText({""})
+  }
+  
+  if (length(artist_names$nvec) == 11) return()
+  
+  artist_names$avec <- c(artist_names$avec, selected_artist()$name)
+  artist_names$nvec <- c(artist_names$nvec, n)
+  
+  # create n-th pair of text input and output
+  insertUI(
+    selector = "#placeholder",
+    where = "afterEnd",
+    ui =  artistchipUI(selected_artist()$name, n)$ui
+  )   
+  updateTextInput(session, "artist", "Insert Artist Name", value="")
+  
+})
+
+# Code to make the remove artist buttons work
+observe({ 
+  lapply(1:10, function(i) 
+    observeEvent(input[[paste0("ui_rmv", artist_names$nvec[i])]], {
+      
+      #Remove the button
+      removeUI(selector = paste0("#ui_txt", artist_names$nvec[i]))
+      removeUI(selector = paste0("#ui_rmv", artist_names$nvec[i]))
+      removeUI(selector = paste0("#ui", artist_names$nvec[i]))
+      
+      #Update the counter and artistnames vector
+      artist_names$nvec <- artist_names$nvec[-i]
+      artist_names$avec <- artist_names$avec[-i]
+      
+      #Reset the maximum number of artist 
+      output$max_n_artist <- renderText({""})
+      #Update the selected artist 
+      if (length(artist_names$nvec) == 0) {
+        artist_names$nvec <- c()
+        artist_names$avec <- c()
+        output$select_artist <- renderText({""})
+      } else {
+        output$select_artist <- renderText({"Selected Artist:"})
+      }
+      
+    })
+  )
+})
+
+# Clear all button code
+observeEvent(input$refbtn, {
+  
+  if(length(artist_names$avec) == 0) return()
+  
+  #Remove all included artist
+  lapply(1:10, function(i) 
+    list(
+      removeUI(selector = paste0("#ui_txt", artist_names$nvec[i])),
+      removeUI(selector = paste0("#ui_rmv", artist_names$nvec[i])),
+      removeUI(selector = paste0("#ui", artist_names$nvec[i]))
+    )
+  )
+  
+  #Reset the counter and artistnames vector
+  artist_names$nvec <- c()
+  artist_names$avec <- c()
+  #Reset the select_artist and max_n_artist
+  output$select_artist <- renderText({""})
+  output$max_n_artist <- renderText({""})
+})
+
+#Generate Results
+get_results <- eventReactive(artist_names$avec, {
+  
+  if(length(artist_names$avec) == 0 ) return()
+  
+  # Read data 
+  if(is.null(1)) {
+    print('here')
+    #Obtain newly added artist
+    new_artist_names <- artist_names$avec[!(artist_names$avec %in% unique(dataframes$df['artist_name']))]
+    new_dataframes <- read_data_function(new_artist_names)
+    #Combine the new data with the former data 
+    df <- rbind(dataframes$df, new_dataframes$df)
+    df_album_release_years <- rbind(dataframes$df_album_release_years, new_dataframes$df_album_release_years)
+    
+  } else {
+    print('else')
+    #Store the data using the read_data_function  
+    dataframes <- read_data_function(artist_names$avec)
+    #Store the data from the read_data_function
+    df <- dataframes$df
+    df_album_release_years <- dataframes$df_album_release_years
+  }
+  
+  # Artist data
+  df_valence_energy <- df_valence_energy_function(df, df_album_release_years)
+  text_color_df <- text_plot_color(artist_names$avec, df_valence_energy)
+  
+  artist_id <- get_artist_id(df)
+  df_artist <- read_artist_data_function(artist_id)
+  artist_summary <- df_artist_summary(df_artist)
+  artist_genres <- df_artist_genres(artist_summary, text_color_df)
+  artist_popularity <- df_artist_popularity(artist_summary, text_color_df)
+  artist_followers <- df_artist_followers(artist_summary, text_color_df)
+
+  plot_colors <- text_plot_color(artist_names$avec, df_valence_energy)
+  df_variety <- df_variety_function(df, df_album_release_years)
+  df_tempo_loudness <- df_tempo_loudness_function(df, df_album_release_years)
+  
+  return(
+    list(df_valence_energy = df_valence_energy, 
+         plot_colors = plot_colors, 
+         text_color_df = text_color_df,
+         df_variety = df_variety,
+         df_tempo_loudness = df_tempo_loudness,
+         artist_genres = artist_genres,
+         artist_popularity = artist_popularity,
+         artist_followers = artist_followers
+    )
+  )
+})
+
+#=============================================== Output ==========================
+
+# plot_valence_energy <- valence_energy_plot(df_valence_energy, plot_colors)
+output$plot1 <- renderHighchart({
+  valence_energy_plot(
+    get_results()$df_valence_energy, 
+    get_results()$plot_colors
+  )
+})
+
+# Create valence over time plot
+output$plot2 <- renderHighchart({
+  valence_time_plot(
+    get_results()$df_valence_energy, 
+    get_results()$plot_colors
+    )
+})
+
+# Create energy over time plot
+output$plot3 <- renderHighchart({
+  energy_time_plot(
+    get_results()$df_valence_energy,
+    get_results()$plot_colors
+    )
+})
+
+# Create tempo over time plot
+output$plot4 <- renderHighchart({
+  tempo_time_plot(
+    get_results()$df_tempo_loudness,
+    get_results()$plot_colors
+    )
+})
+
+# Create loudness over time plot
+output$plot5 <- renderHighchart({
+  loudness_time_plot(
+    get_results()$df_tempo_loudness,
+    get_results()$plot_colors
+    )
+})
+
+# Create valence density plot
+output$plot6 <- renderPlotly({
+  valence_dens_plot(
+    get_results()$df_valence_energy
+  )
+})
+
+# Create energy density plot
+output$plot7 <- renderPlotly({
+  energy_dens_plot(
+    get_results()$df_valence_energy
+  )
+})
+
+# Create tempo density plot
+output$plot8 <- renderPlotly({
+  tempo_dens_plot(
+    get_results()$df_tempo_loudness
+  )
+})
+
+# Create loudness density plot
+output$plot9 <- renderPlotly({
+  loudness_dens_plot(
+    get_results()$df_tempo_loudness
+  )
+})
+
+# Create the summary text
+output$summarytext <- renderUI({
+  HTML(paste0("You have added a total of ", length(artist_names$avec), " artists to compare."), "</br></br>",
+       paste(artist_genre_text(get_results()$artist_genres)$text, collapse=" "), "</br></br>",
+       paste(artist_popularity_text(get_results()$artist_popularity, get_results()$artist_followers)$text, collapse=" "), "</br></br>",
+       paste0("The artist with the highest median valence is ",
+              "<span style=\"color: ",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianValence) %>% top_n(1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>% pull("color") %>% str_trim(),
+              ";\">",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianValence) %>% top_n(1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ", while the artist with the lowest median valence is ",
+              "<span style=\"color: ",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianValence) %>% top_n(-1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>%  pull("color") %>% str_trim(),
+              ";\">",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianValence) %>% top_n(-1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ". The artist with the highest median energy is ",
+              "<span style=\"color: ",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianEnergy) %>% top_n(1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>% pull("color") %>% str_trim(),
+              ";\">",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianEnergy) %>% top_n(1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ", while the artist with the lowest median energy is ",
+              "<span style=\"color: ",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianEnergy) %>% top_n(-1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>% pull("color") %>% str_trim(),
+              ";\">",
+              median_valence_energy_function(get_results()$df_valence_energy) %>% select(artist_name, medianEnergy) %>% top_n(-1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ". ",
+              "The artist with the highest median tempo is ",
+              "<span style=\"color: ",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness)%>% select(artist_name, medianTempo) %>% top_n(1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>% pull("color") %>% str_trim(),
+              ";\">",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianTempo) %>% top_n(1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ", while the artist with the lowest median tempo is ",
+              "<span style=\"color: ",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianTempo) %>% top_n(-1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>%  pull("color") %>% str_trim(),
+              ";\">",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianTempo) %>% top_n(-1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ". The artist with the highest median loudness is ",
+              "<span style=\"color: ",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianLoudness) %>% top_n(1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>% pull("color") %>% str_trim(),
+              ";\">",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianLoudness) %>% top_n(1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              ", while the artist with the lowest median loudness is ",
+              "<span style=\"color: ",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianLoudness) %>% top_n(-1) %>% slice(1) %>% left_join(get_results()$text_color_df) %>% pull("color") %>% str_trim(),
+              ";\">",
+              median_tempo_loudness_function(get_results()$df_tempo_loudness) %>% select(artist_name, medianLoudness) %>% top_n(-1) %>% slice(1) %>% pull("artist_name") %>% str_trim(),
+              "</span>",
+              "."))
+})
+
+# Create variety plot
+output$plot10 <- renderPlotly({
+  variety_plot(
+    get_results()$df_variety
+  )
+})
+
+
+```
+
+Summary
+=====================================  
+
+In this page we present a summary of the comparison between the artists you've chosen.
+
+The measurements of comparison are:
+
+```{r}
+
+actionButton("valence", "Valence", icon = icon('fas fa-info-circle'))
+actionButton("energy", "Energy", icon = icon('fas fa-info-circle'))
+actionButton("tempo", "Tempo", icon = icon('fas fa-info-circle'))
+actionButton("loudness", "Loudness", icon = icon('fas fa-info-circle'))
+
+observeEvent(input$valence, {
+      showModal(modalDialog(
+        title = "What is valence?",
+        "Valence is a measure that describes the musical positiveness. Tracks with high valence sound more positive (e.g.          happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+})
+
+observeEvent(input$energy, {
+      showModal(modalDialog(
+        title = "What is energy?",
+        "Energy represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud,            and noisy. Tempo is the speed or pace of a given piece is measured by Beat Per Minute (BPM). ",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+})
+
+observeEvent(input$tempo, {
+      showModal(modalDialog(
+        title = "What is tempo?",
+        "Tempo is the speed or pace of a given piece is measured by Beat Per Minute (BPM).",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+})
+
+observeEvent(input$loudness, {
+      showModal(modalDialog(
+        title = "What is loudness?",
+        "Loudness is the quality of a sound that is the primary psychological correlate of physical strength, and is               measured in Decibel from -60 to 0 where a score closer to zero is louder.",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+})
+
+```
+
+### Summary
+
+```{r}
+htmlOutput("summarytext")
+```
+
+Valence and Energy
+=====================================  
+
+Valence is a measure that describes the musical positiveness. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry). Energy is a tht represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.
+
+By combining valence and energy, we can categorize tracks. Tracks with a low valence and low energy can be identified as sad or depressing, while tracks with a low valence and high energy can be identified as turbulent or angry. Meanwhile, tracks with a high valence and low energy can be identified as chill or peaceful, while tracks with a high valence and high energy can be identified as happy or joyful.
+
+In the plot below you can see a comparison of your selected artist on a plane representing valence and energy. Each dot represents one track in their discography, and the large dot represent their average level on this plane.
+
+### Valence and Energy
+
+```{r}
+highchartOutput("plot1")
+```
+
+Timeline
+=====================================  
+
+Artists change their style over the years that they are active. The plots below show how certain characteristics of music have changed over the career of your selected artists. The characteristics displayed are valence and energy.
+
+Valence is a measure that describes the musical positiveness. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry). Energy represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. Tempo is the speed or pace of a given piece is measured by Beat Per Minute (BPM). Loudness is the quality of a sound that is the primary psychological correlate of physical strength, and is measured in Decibel from -60 to 0 where a score closer to zero is louder.
+
+```{r}
+checkboxGroupInput("checkGroupTime", label = h3("Which variables do you wish to plot?"), 
+    choices = list("Valence" = 1, "Energy" = 2, "Tempo" = 3, "Loudness" = 4),
+    selected = 1, inline = TRUE)
+
+conditionalPanel(
+  condition = 'input.checkGroupTime && input.checkGroupTime.indexOf("1") > -1',
+  highchartOutput("plot2")
+)
+
+conditionalPanel(
+  condition = 'input.checkGroupTime && input.checkGroupTime.indexOf("2") > -1',
+  highchartOutput("plot3")
+)
+
+conditionalPanel(
+  condition = 'input.checkGroupTime && input.checkGroupTime.indexOf("3") > -1',
+  highchartOutput("plot4")
+)
+
+conditionalPanel(
+  condition = 'input.checkGroupTime && input.checkGroupTime.indexOf("4") > -1',
+  highchartOutput("plot5")
+)
+```
+
+Comparison
+=====================================  
+
+In the plots below, artists are directly compared on their valence and energy. The plots plot the distribution of the artist using a density function, while the dotted line represents the median value.
+
+Valence is a measure that describes the musical positiveness. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry). Energy represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. Tempo is the speed or pace of a given piece is measured by Beat Per Minute (BPM). Loudness is the quality of a sound that is the primary psychological correlate of physical strength, and is measured in Decibel from -60 to 0 where a score closer to zero is louder.
+
+```{r}
+checkboxGroupInput("checkGroupDens", label = h3("Which variables do you wish to plot?"), 
+    choices = list("Valence" = 1, "Energy" = 2, "Tempo" = 3, "Loudness" = 4),
+    selected = 1, inline = TRUE)
+
+conditionalPanel(
+  condition = 'input.checkGroupDens && input.checkGroupDens.indexOf("1") > -1',
+  plotlyOutput("plot6")
+)
+
+conditionalPanel(
+  condition = 'input.checkGroupDens && input.checkGroupDens.indexOf("2") > -1',
+  plotlyOutput("plot7")
+)
+
+conditionalPanel(
+  condition = 'input.checkGroupDens && input.checkGroupDens.indexOf("3") > -1',
+  plotlyOutput("plot8")
+)
+
+conditionalPanel(
+  condition = 'input.checkGroupDens && input.checkGroupDens.indexOf("4") > -1',
+  plotlyOutput("plot9")
+)
+```
+
+Variety
+=====================================  
+
+Some artists vary more in their musical creativity than others. In this case, we have defined variety as the number of musical keys (e.g. C Major, D Minor, etc) used on an album Of course, albums that have more tracks have more opportunity of variety. To correct for this influence, we normalised the value by dividing the variety by the number of tracks on the record. Below is a table representing the median normalised variety across all tracks, and a plot with the normalised variety for each album.
+
+### Variety plot
+
+```{r}
+plotlyOutput("plot10")
+```
