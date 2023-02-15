@@ -28,12 +28,11 @@
 
   - [Datify](https://kneijenhuijs.shinyapps.io/Datify/) - [cloud](https://posit.cloud/content/1100182), [blog](https://community.rstudio.com/t/datify-2020-shiny-contest-submission/59642)
   
-    - [69 love songs](https://committedtotape.shinyapps.io/sixtyninelovesongs/) - [cloud](https://posit.cloud/content/245439), [blog](https://community.rstudio.com/t/shiny-contest-submission-lyrical-analysis-of-69-love-songs-by-magnetic-fields/25202)
-  
-  - [Blog Explorer](https://nz-stefan.shinyapps.io/blog-explorer/) - [repo](https://github.com/nz-stefan/blog-explorer), [blog](https://community.rstudio.com/t/blog-explorer-2020-shiny-contest-submission/58803)
+  - [69 love songs](https://committedtotape.shinyapps.io/sixtyninelovesongs/) - [cloud](https://posit.cloud/content/245439), [blog](https://community.rstudio.com/t/shiny-contest-submission-lyrical-analysis-of-69-love-songs-by-magnetic-fields/25202)
 
   - [Commute Explorer](https://nz-stefan.shinyapps.io/commute-explorer-2/) - [repo](https://github.com/nz-stefan/commute-explorer-2), [blog](https://community.rstudio.com/t/commute-explorer-shiny-contest-submission/104651)
 
+  - [Blog Explorer](https://nz-stefan.shinyapps.io/blog-explorer/) - [repo](https://github.com/nz-stefan/blog-explorer), [blog](https://community.rstudio.com/t/blog-explorer-2020-shiny-contest-submission/58803)
 
 * Week 6 - Tableau
 
