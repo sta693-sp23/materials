@@ -38,6 +38,9 @@
 
 * Week 7 - Tableau integration with R
 
+  - [shinytableau](https://rstudio.github.io/shinytableau/)
+  
+  - [plumbertableau](https://rstudio.github.io/plumbertableau/index.html)
 
 ## Useful resources
 
