@@ -34,7 +34,11 @@
 
   - [Blog Explorer](https://nz-stefan.shinyapps.io/blog-explorer/) - [repo](https://github.com/nz-stefan/blog-explorer), [blog](https://community.rstudio.com/t/blog-explorer-2020-shiny-contest-submission/58803)
 
-* Week 6 - Tableau
+* Week 6 - ~~Tableau~~ Plumber
+
+  - [plumber](https://www.rplumber.io/)
+  
+  - [plumber + connect](https://docs.posit.co/connect/user/plumber/)
 
 * Week 7 - Tableau integration with R
 
