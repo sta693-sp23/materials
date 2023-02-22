@@ -37,6 +37,10 @@
 * Week 6 - ~~Tableau~~ Plumber
 
   - [plumber](https://www.rplumber.io/)
+    
+    - [cheat sheet](https://github.com/rstudio/cheatsheets/blob/main/plumber.pdf)
+    
+    - [serializers](https://www.rplumber.io/articles/rendering-output.html#serializers)
   
   - [plumber + connect](https://docs.posit.co/connect/user/plumber/)
 

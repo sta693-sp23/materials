@@ -1,0 +1,13 @@
+name: plumber
+title: plumber
+username: cr173
+account: cr173
+server: shiny.stat.duke.edu
+hostUrl: https://shiny.stat.duke.edu/__api__
+appId: 10
+bundleId: 19
+url: https://shiny.stat.duke.edu/content/84a606e2-5239-4f5b-a9ea-a0c774ac5eb5/
+when: 1677084729.48797
+lastSyncTime: 1677084729.48798
+asMultiple: FALSE
+asStatic: FALSE
