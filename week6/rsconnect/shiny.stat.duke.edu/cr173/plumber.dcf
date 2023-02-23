@@ -5,9 +5,10 @@ account: cr173
 server: shiny.stat.duke.edu
 hostUrl: https://shiny.stat.duke.edu/__api__
 appId: 10
-bundleId: 19
+bundleId: 21
 url: https://shiny.stat.duke.edu/content/84a606e2-5239-4f5b-a9ea-a0c774ac5eb5/
-when: 1677084729.48797
-lastSyncTime: 1677084729.48798
+when: 1677099743.70097
+lastSyncTime: 1677099743.70098
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: plumber_live.R
