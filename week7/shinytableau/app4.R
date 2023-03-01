@@ -1,5 +1,3 @@
-# filetype: shinyApp
-
 library(shiny)
 library(shinytableau)
 library(promises)

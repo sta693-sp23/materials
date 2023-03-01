@@ -8,8 +8,9 @@ library(summarytools)
 manifest = tableau_manifest_from_yaml()
 
 ui = function(req) {
-  fluidPage(theme = shinytableau_theme(),
-            uiOutput("summary")
+  fluidPage(
+    theme = shinytableau_theme(),
+    uiOutput("summary")
   )
 }
 
