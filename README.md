@@ -50,6 +50,8 @@
   
   - [plumbertableau](https://rstudio.github.io/plumbertableau/index.html)
 
+  - promises - [intro](https://rstudio.github.io/promises/articles/intro.html) + [overview](https://rstudio.github.io/promises/articles/overview.html)
+
 ## Useful resources
 
 CDVS Workshop w/ Eric Monson - https://duke.libcal.com/event/9994118
